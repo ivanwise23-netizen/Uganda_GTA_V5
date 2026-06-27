@@ -1,0 +1,1 @@
+Open-world 2D Uganda GTA made with Godot 4 on Android. Features: 2 characters, 4 drivable vehicles, wanted system, 5 weapons, 3 radio stations, and a full Uganda map. Rob Rolex shops, outrun KCCA, and build UGX cash. Controls: WASD, E, SPACE, 1-5. Created fully in Termux without a PC.
