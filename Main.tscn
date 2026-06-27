@@ -1,0 +1,128 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Texture2D" uid="1" path="res://ivanwise.png" id="1_ivan"]
+[ext_resource type="Texture2D" uid="2" path="res://ssekamatte.png" id="2_ssek"]
+[ext_resource type="Texture2D" uid="3" path="res://boda.png" id="3_boda"]
+[ext_resource type="Texture2D" uid="4" path="res://taxi.png" id="4_taxi"]
+[ext_resource type="Texture2D" uid="5" path="res://cruiser.png" id="5_cruiser"]
+[ext_resource type="Texture2D" uid="6" path="res://kcca.png" id="6_kcca"]
+[ext_resource type="Texture2D" uid="7" path="res://uganda_full.png" id="7_map"]
+[ext_resource type="Texture2D" uid="8" path="res://rolex.png" id="8_rolex"]
+[ext_resource type="Texture2D" uid="9" path="res://stars.png" id="9_stars"]
+[ext_resource type="Texture2D" uid="10" path="res://weapons.png" id="10_wep"]
+[ext_resource type="AudioStreamOggVorbis" uid="11" path="res://afrobeats.ogg" id="11_afro"]
+[ext_resource type="AudioStreamOggVorbis" uid="12" path="res://dancehall.ogg" id="12_dance"]
+[ext_resource type="AudioStreamOggVorbis" uid="13" path="res://luganda.ogg" id="13_luga"]
+
+[node name="Main" type="Node2D"]
+script = SubResource("GDScript_GTA")
+
+[node name="TileMap" type="TileMap" parent="."]
+[node name="Camera2D" type="Camera2D" parent="."]
+current = true
+zoom = Vector2(0.6, 0.6)
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(512, 400)
+[node name="Sprite" type="Sprite2D" parent="Player"]
+scale = Vector2(1.5, 1.5)
+
+[node name="Vehicles" type="Node" parent="."]
+[node name="Boda" type="Area2D" parent="Vehicles"][node name="Sprite" type="Sprite2D" parent="Boda"]
+[node name="Taxi" type="Area2D" parent="Vehicles"][node name="Sprite" type="Sprite2D" parent="Taxi"]
+[node name="Cruiser" type="Area2D" parent="Vehicles"][node name="Sprite" type="Sprite2D" parent="Cruiser"]
+[node name="KCCA" type="Area2D" parent="Vehicles"][node name="Sprite" type="Sprite2D" parent="KCCA"]
+
+[node name="RolexShops" type="Node" parent="."]
+[node name="Shop1" type="Area2D" parent="RolexShops"][node name="Sprite" type="Sprite2D" parent="Shop1"]
+
+[node name="Radio" type="AudioStreamPlayer2D" parent="."]
+[node name="WantedUI" type="Sprite2D" parent="."]
+position = Vector2(200, 20)
+texture = ExtResource("9_stars")
+region_enabled = true
+visible = false
+
+[node name="WeaponIcon" type="Sprite2D" parent="."]
+position = Vector2(50, 50)
+texture = ExtResource("10_wep")
+region_enabled = true
+region_rect = Rect2(32, 0, 32, 32)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+[node name="Label" type="Label" parent="HUD"]
+position = Vector2(10, 10)
+
+[sub_resource type="GDScript" id="GDScript_GTA"]
+script/source = "extends Node2D
+var player_name = \"Ivanwise\"
+var speed = 240
+var in_car = false
+var current_vehicle = null
+var wanted_level = 0
+var money = 0
+var weapons = [\"Fist\",\"Stick\",\"Pistol\",\"Extinguisher\",\"RPG\"]
+var w_idx = 2
+var stations = [preload(\"res://afrobeats.ogg\"),preload(\"res://dancehall.ogg\"),preload(\"res://luganda.ogg\")]
+var names = [\"Radio City\",\"Capital FM\",\"Bukedde FM\"]
+var station = 0
+var vehicle_speeds = {\"Boda\":280, \"Taxi\":220, \"Cruiser\":300, \"KCCA\":260}
+
+func _ready():
+	$Player/Sprite.texture = preload(\"res://ivanwise.png\")
+	$Vehicles/Boda/Sprite.texture = preload(\"res://boda.png\")
+	$Vehicles/Taxi/Sprite.texture = preload(\"res://taxi.png\")
+	$Vehicles/Cruiser/Sprite.texture = preload(\"res://cruiser.png\")
+	$Vehicles/KCCA/Sprite.texture = preload(\"res://kcca.png\")
+	$RolexShops/Shop1/Sprite.texture = preload(\"res://rolex.png\")
+	$RolexShops/Shop1.position = Vector2(600, 400)
+	$Vehicles/Boda.position = Vector2(550, 400)
+	$Vehicles/Taxi.position = Vector2(600, 400)
+	$Vehicles/Cruiser.position = Vector2(650, 400)
+	$Vehicles/KCCA.position = Vector2(700, 400)
+	
+	var ts = TileSet.new()
+	var map_source = TileSetAtlasSource.new()
+	map_source.texture = preload(\"res://uganda_full.png\")
+	ts.add_source(map_source)
+	$TileMap.tile_set = ts
+	for x in range(64): for y in range(64): $TileMap.set_cell(0, Vector2i(x,y), 0, Vector2i(x,y))
+
+func add_wanted(amount):
+	wanted_level = min(wanted_level + amount, 5)
+	$WantedUI.visible = wanted_level > 0
+	$WantedUI.region_rect = Rect2(0, 0, wanted_level * 32, 32)
+
+func _physics_process(d):
+	if not in_car:
+		var dir = Input.get_vector(\"ui_left\",\"ui_right\",\"ui_up\",\"ui_down\")
+	$Player.velocity = dir * speed
+	$Player.move_and_slide()
+	$Camera2D.global_position = $Player.global_position
+	else:
+		var dir = Input.get_vector(\"ui_left\",\"ui_right\",\"ui_up\",\"ui_down\")
+		current_vehicle.velocity = dir * vehicle_speeds[current_vehicle.name]
+		current_vehicle.move_and_slide()
+	$Camera2D.global_position = current_vehicle.global_position
+
+func _input(e):
+	if e.is_action_pressed(\"1\"): player_name=\"Ivanwise\"; $Player/Sprite.texture = preload(\"res://ivanwise.png\")
+	if e.is_action_pressed(\"2\"): player_name=\"Ssekamatte\"; $Player/Sprite.texture = preload(\"res://ssekamatte.png\")
+	
+	for v in $Vehicles.get_children():
+		if e.is_action_pressed(\"E\") and $Player.position.distance_to(v.position) < 40:
+			in_car = not in_car
+			current_vehicle = v if in_car else null
+			$Player.visible = not in_car
+			if in_car: $Radio.stream = stations[station]; $Radio.play() else: $Radio.stop()
+	
+	if e.is_action_pressed(\"space\") and $Player.position.distance_to($RolexShops/Shop1.position) < 50 and not in_car:
+	money += 500
+		add_wanted(2)
+	
+	if in_car and e.is_action_pressed(\"1\"): station = (station+1)%3; $Radio.stream = stations[station]; $Radio.play()
+	for i in range(5): if e.is_action_pressed(str(i+1)): w_idx = i; $WeaponIcon.region_rect.position.x = i*32
+	
+	var car_name = current_vehicle.name if in_car else \"On Foot\"
+	$HUD/Label.text = player_name + \" | \" + car_name + \" | UGX: \" + str(money) + \" | Stars: \" + str(wanted_level) + \" | \" + weapons[w_idx]
+"
